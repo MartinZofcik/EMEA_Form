@@ -23,6 +23,10 @@ import {
 import Swal from 'sweetalert2';
 import { DynamicField } from './DynamicField';
 
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+
 const schema = yup.object().shape({});
 
 const useStyles = makeStyles((theme) => ({
@@ -139,6 +143,12 @@ const optionDepotParts = [
   { label: 'I WANT TO UPGRADE PARTS', value: '' },
 ];
 
+const processArray = (array) => {
+  const newArray = [];
+  array.map((object) => newArray.push(object.label));
+  return newArray;
+};
+
 const optionPartsOnly = [
   { label: 'Freight', value: '687-10988' },
   { label: 'Motherboard', value: '739-56837' },
@@ -214,10 +224,35 @@ export const EMEA_FORM = () => {
     mode: 'onBlur',
     resolver: yupResolver(schema),
   });
+  const [values, setValue] = useState({
+    issue: '',
+    diagnosticStatus: '',
+    serviceTag: '',
+    dispatchType: '',
+    commodityRequested: [],
+    paymentMethod: '',
+    submitterEmail: '',
+    name: '',
+    phone: '',
+    ext: '',
+    customerEmail: '',
+    bestTime: '',
+    shippingLine1: '',
+    shippingLine2: '',
+    shippingCity: '',
+    shippingState: '',
+    shippingZIP: '',
+    shippingCountry: '',
+    billingLine1: '',
+    billingLine2: '',
+    billingCity: '',
+    billingState: '',
+    billingZIP: '',
+    billingCountry: '',
+  });
 
-  //   const handleChange = (input) => (e) => {
-  //     this.setState({ [input]: e.target.value });
-  //   };
+  const handleChange = (event) =>
+    setValue({ ...values, [event.target.name]: event.target.value ?? '' });
 
   const styles = useStyles();
 
@@ -233,6 +268,14 @@ export const EMEA_FORM = () => {
     setBillingCheck(!billingCheck);
   };
 
+  const logChange = (event) => {
+    console.log(event.target.value);
+    setValue({
+      ...values,
+      commodityRequested: event.target.value,
+    });
+  };
+
   const onSubmit = () => {
     Swal.fire(
       'Copied to clipboard',
@@ -242,10 +285,12 @@ export const EMEA_FORM = () => {
     navigator.clipboard.writeText(output);
   };
 
+  // const handleSelect = (event) =>
+
   return (
     <MainContainer>
+      {/* <Container> */}
       <Header title="Issue Info" />
-
       <Form onSubmit={handleSubmit(onSubmit)}>
         <FormControl
           style={{ marginTop: '-10px' }}
@@ -273,10 +318,11 @@ export const EMEA_FORM = () => {
               //* *********************************************************************ISSUE
               className={styles.root}
               ref={register}
+              value={values.issue}
               name="issue"
               type="text"
               label="Issue"
-              //onChange={handleChange('issue')}
+              onChange={handleChange}
               error={!!errors.issue}
               helperText={errors?.issue?.message}
             />
@@ -285,10 +331,11 @@ export const EMEA_FORM = () => {
               //* *********************************************************************DIAGNOSTIC STATUS
               className={styles.root}
               ref={register}
+              value={values.diagnosticStatus}
               name="diagnosticStatus"
               type="text"
               label="Diagnostic status (passed/error#) *"
-              //onChange={handleChange('diagnosticStatus')}
+              onChange={handleChange}
               error={!!errors.diagnosticStatus}
               helperText={errors?.diagnosticStatus?.message}
             />
@@ -297,10 +344,11 @@ export const EMEA_FORM = () => {
               //* *********************************************************************SERVICE TAG
               className={styles.root}
               ref={register}
+              value={values.serviceTag}
               name="serviceTag"
               type="text"
               label="Service Tag *"
-              //onChange={handleChange('serviceTag')}
+              onChange={handleChange}
               error={!!errors.serviceTag}
               helperText={errors?.serviceTag?.message}
             />
@@ -316,7 +364,7 @@ export const EMEA_FORM = () => {
                 ref={register}
                 name="dispatchType"
                 value={values.dispatchType}
-                //onChange={handleChange('dispatchType')}
+                onChange={handleChange}
                 label="Dispatch Type"
                 error={!!errors.dispatchType}
               >
@@ -329,9 +377,9 @@ export const EMEA_FORM = () => {
             </FormControl>
 
             <MultipleSelect
-              //* *********************************************************************COMMODITY REQUESTED
-              //onChange={handleChange}
-              options={commodityRequestedOptions}
+              onChange={logChange}
+              value={values.commodityRequested}
+              options={optionDepotParts}
             />
           </div>
         )}
@@ -614,7 +662,6 @@ export const EMEA_FORM = () => {
           </div>
         )}
       </Form>
-
       <PrimaryButton
         color="primary"
         onClick={onSubmit}
@@ -628,6 +675,8 @@ export const EMEA_FORM = () => {
       >
         Reset
       </PrimaryButton>
+
+      {/* </Container> */}
     </MainContainer>
   );
 };

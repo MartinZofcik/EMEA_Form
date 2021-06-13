@@ -20,13 +20,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MultipleSelect({ options }) {
+export default function MultipleSelect({ options, onChange, value }) {
   const classes = useStyles();
   const [personName, setPersonName] = React.useState([]);
 
   const handleChange = (event) => {
-    setPersonName(event.target.value);
-    //console.log(personName);
+    console.log(event.target.value);
   };
 
   return (
@@ -40,8 +39,8 @@ export default function MultipleSelect({ options }) {
         <Select
           multiple
           fullWidth
-          value={personName}
-          onChange={handleChange}
+          value={value}
+          onChange={onChange}
           input={<Input id="select-multiple-chip" />}
           renderValue={(selected) => (
             <div className={classes.chips}>
@@ -51,9 +50,9 @@ export default function MultipleSelect({ options }) {
             </div>
           )}
         >
-          {options.map((name) => (
-            <MenuItem key={name} value={name}>
-              {name}
+          {options.map((object) => (
+            <MenuItem key={object.label} value={object.value}>
+              {object.label}
             </MenuItem>
           ))}
         </Select>
