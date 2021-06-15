@@ -79,6 +79,7 @@ export const DynamicField = () => {
             value={inputField.quantity}
             onChange={(event) => handleChangeInput(inputField.id, event)}
           />
+          <br />
           <IconButton
             disabled={inputFields.length === 1}
             onClick={() => handleRemoveFields(inputField.id)}

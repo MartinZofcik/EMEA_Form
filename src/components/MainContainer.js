@@ -22,7 +22,7 @@ export const MainContainer = ({ children, ...props }) => {
     <Container
       className={styles.root}
       component="main"
-      maxWidth="xs"
+      maxWidth="sm"
       {...props}
     >
       {children}

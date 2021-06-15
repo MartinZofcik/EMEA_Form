@@ -22,11 +22,6 @@ const useStyles = makeStyles((theme) => ({
 
 export default function MultipleSelect({ options, onChange, value }) {
   const classes = useStyles();
-  const [personName, setPersonName] = React.useState([]);
-
-  const handleChange = (event) => {
-    console.log(event.target.value);
-  };
 
   return (
     <div>
