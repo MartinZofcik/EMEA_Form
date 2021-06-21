@@ -27,29 +27,9 @@ import { Preview } from './Preview';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import { Banner } from './Banner';
 
-const schema = yup.object().shape({
-  // issue: yup
-  //   .string()
-  //   .matches(/^([^0-9]*)$/, 'Issue should not contain numbers')
-  //   .required('Issue is a required field'),
-  // repairUpgrade: yup.string(),
-  // issue: yup.string().when('repairUpgrade', {
-  //   is: (repairUpgrade) => 'Spare Parts/S&P/Kits',
-  //   then: yup.string().required('Issue is a required field'),
-  //   //otherwise: yup.string(),
-  // }),
-  // diagnosticStatus: yup
-  //   .string()
-  //   .matches(/^([^0-9]*)$/, 'Diagnostic status should not contain numbers')
-  //   .required('Diagnostic status is a required field'),
-  // serviceTag: yup.string().required('Service Tag is a required field'),
-  //dispatchType: yup.string().required(),
-  // paymentMethod: yup
-  //   .string()
-  //   .ensure()
-  //   .required('Payment Method is a required field'),
-});
+const schema = yup.object().shape({});
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -224,7 +204,7 @@ const commodityOptionsSwitch = (dispatchType) => {
 export const EMEA_FORM = () => {
   const { register, handleSubmit, errors } = useForm({
     mode: 'onBlur',
-    resolver: yupResolver(schema),
+    // resolver: yupResolver(schema),
   });
   const [values, setValue] = useState({
     repairUpgrade: 'Repair/Upgrade',
@@ -282,9 +262,9 @@ Billing PostalCode: ${values.billingZIP}
 Billing Country: ${values.billingCountry}\n`;
 
   const handleChange = (event) => {
-    if (event.target.name === 'dispatchType') {
-      setValue({ ...values, commodityRequested: [''] });
-    }
+    // if (event.target.name === 'dispatchType') {
+    //   setValue({ ...values, commodityRequested: [''] });
+    // }
     setValue({ ...values, [event.target.name]: event.target.value ?? '' });
   };
 
@@ -315,6 +295,7 @@ Billing Country: ${values.billingCountry}\n`;
 
   return (
     <Container fluid>
+      {/* <Banner /> */}
       <Row>
         <Col>
           <MainContainer>
@@ -347,6 +328,7 @@ Billing Country: ${values.billingCountry}\n`;
                 <div>
                   <Input
                     //* *********************************************************************ISSUE
+                    //required
                     className={styles.root}
                     ref={register}
                     value={values.issue}

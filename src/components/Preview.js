@@ -33,7 +33,7 @@ export const Preview = ({ values }) => {
 
       <label className={styles.root}>Commodity Requested:&nbsp;</label>
       <label>
-        {/* {values.commodityRequested.length > 1
+        {/* {values.commodityRequested.length > 0
           ? values.commodityRequested.join(', ')
           : values.commodityRequested} */}
         {values.commodityRequested.join(', ')}
