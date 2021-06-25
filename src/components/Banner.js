@@ -28,6 +28,17 @@ export const Banner = () => {
         className={styles.img}
         src="https://www.delltechnologies.com/content/dam/delltechnologies/images/ghf/dell-tech-logo.svg"
       ></img>
+      <p
+        style={{
+          color: 'white',
+          fontSize: 'larger',
+          marginLeft: '16em',
+          fontWeight: 'lighter',
+          padding: '1em',
+        }}
+      >
+        ProSupport to PON Handshake Template
+      </p>
     </div>
   );
 };

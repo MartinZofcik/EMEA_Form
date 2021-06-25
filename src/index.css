@@ -128,13 +128,13 @@ footer {
 .preview {
   /* margin-left: 60em; */
   position: fixed;
-  margin-top: 2em;
+  margin-top: 0.5em;
   margin-bottom: 4em;
   background-color: #fff;
   padding: 2em;
   padding-top: 3em;
   line-height: 12px;
-  height: 47em;
+  height: 46em;
   /* width: 90%; */
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.07), 0 10px 10px rgba(0, 0, 0, 0.001);
   border-radius: 15px;

@@ -3,10 +3,7 @@ import Button from './Button';
 
 export const Header = ({ title }) => {
   const showHelp = () => {
-    window.open(
-      'http://ausdwoopweb01/Intake_EMEA/EMEA_OOP_Handshake_Form.html',
-      '_blank'
-    );
+    window.open('./help.html', '_blank');
   };
 
   return (
