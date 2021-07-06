@@ -32,11 +32,11 @@ export const Preview = ({ values }) => {
       <br />
 
       <label className={styles.root}>Commodity Requested:&nbsp;</label>
+      <label>{values.commodityRequested.join(', ')}</label>
       <label>
-        {/* {values.commodityRequested.length > 0
-          ? values.commodityRequested.join(', ')
-          : values.commodityRequested} */}
-        {values.commodityRequested.join(', ')}
+        {Object.values(values.spareKits)?.map(
+          ({ value, quantity }) => `${quantity}x ${value}, `
+        )}
       </label>
       <br />
 

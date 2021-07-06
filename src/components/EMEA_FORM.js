@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
@@ -51,33 +51,6 @@ const useStyles = makeStyles((theme) => ({
     marginTop: theme.spacing(1),
   },
 }));
-
-// const values = {
-//   issue: '',
-//   diagnosticStatus: '',
-//   serviceTag: '',
-//   dispatchType: '',
-//   commodityRequested: '',
-//   paymentMethod: '',
-//   submitterEmail: '',
-//   name: '',
-//   phone: '',
-//   ext: '',
-//   customerEmail: '',
-//   bestTime: '',
-//   shippingLine1: '',
-//   shippingLine2: '',
-//   shippingCity: '',
-//   shippingState: '',
-//   shippingZIP: '',
-//   shippingCountry: '',
-//   billingLine1: '',
-//   billingLine2: '',
-//   billingCity: '',
-//   billingState: '',
-//   billingZIP: '',
-//   billingCountry: '',
-// };
 
 const dispatchTypeOptions = [
   'Parts Only',
@@ -212,16 +185,7 @@ export const EMEA_FORM = () => {
     serviceTag: '',
     dispatchType: '',
     commodityRequested: [],
-    spareKits: {
-      0: {
-        value: 'COE TO TU SUSEDA',
-        quantity: 'Jezus dopici',
-      },
-      1: {
-        value: '12345',
-        quantity: '4',
-      },
-    },
+    spareKits: [],
     paymentMethod: '',
     submitterEmail: '',
     name: '',
@@ -247,7 +211,11 @@ export const EMEA_FORM = () => {
 Type of Request: TOTAL SOLUTIONS
 Issue: ${values.issue}
 Diagnostic Status: ${values.diagnosticStatus}
-Commodity Requested: ${values.commodityRequested}
+Commodity Requested: ${
+    values.commodityRequested
+  } ${values.commodityRequested?.map(
+    ({ quantity, value }) => `${quantity} x ${value}`
+  )}
 Dispatch Type: ${values.dispatchType}
 Payment Method: ${values.paymentMethod}\n
 Service Tag: ${values.serviceTag}\n
@@ -270,13 +238,25 @@ Billing State: ${values.billingState}
 Billing PostalCode: ${values.billingZIP}
 Billing Country: ${values.billingCountry}\n`;
 
-  const handleChange = (event) => {
-    setValue({ ...values, [event.target.name]: event.target.value ?? '' });
+  useEffect(() => {
+    setValue({ ...values, commodityRequested: [] });
+  }, [values.dispatchType]);
 
-    // if (event.target.name === 'dispatchType') {
-    //   setValue({ ...values, commodityRequested: [] });
-    //   //console.log('dopice vynuluj tie commodity');
-    // }
+  useEffect(() => {
+    setValue({
+      ...values,
+      spareKits: [],
+      commodityRequested: [],
+      issue: '',
+      diagnosticStatus: '',
+      serviceTag: '',
+      dispatchType: '',
+    });
+  }, [values.repairUpgrade]);
+
+  const handleChange = (event) => {
+    console.log(typeof event.target.value);
+    setValue({ ...values, [event.target.name]: event.target.value ?? '' });
   };
 
   const styles = useStyles();
@@ -320,12 +300,7 @@ Billing Country: ${values.billingCountry}\n`;
   };
 
   const handleChangeInput = (event, index) => {
-    // const newInputFields = inputFields.map((i) => {
-    //   if (id === i.id) {
-    //     i[event.target.name] = event.target.value;
-    //   }
-    //   //console.log(i);
-    //   return i;
+    console.log(values.spareKits);
     event.target.name === 'commodityCodeValue'
       ? setValue({
           ...values,
@@ -393,7 +368,8 @@ Billing Country: ${values.billingCountry}\n`;
 
           // dispatchType: yup
           //   .string()
-          //   .required('Dispatch Type is a required field'), //SELECTY POJEANE TAKTO NEJDU
+          //   .required("Dispatch Type is a required field")
+          //   .oneOf(dispatchTypeOptions), //SELECTY POJEANE TAKTO NEJDU
 
           //commodityRequested: yup.string().required(),
 
@@ -460,6 +436,8 @@ Billing Country: ${values.billingCountry}\n`;
     mode: 'onBlur',
     resolver: yupResolver(schema),
   });
+
+  useEffect(() => console.log(errors), [errors]);
 
   return (
     <>
@@ -549,7 +527,7 @@ Billing Country: ${values.billingCountry}\n`;
                         value={values.dispatchType}
                         onChange={handleChange}
                         label="Dispatch Type"
-                        error={!!errors.dispatchType}
+                        error={!!errors?.dispatchType?.message}
                       >
                         {dispatchTypeOptions.map((option, index) => (
                           <MenuItem value={option} key={index}>
@@ -576,7 +554,7 @@ Billing Country: ${values.billingCountry}\n`;
                         label="Commodity Code"
                         style={{ width: '53%' }}
                         //variant="filled"
-                        value={values.spareKits[index].value}
+                        value={values?.spareKits[index]?.value}
                         onChange={(event) => handleChangeInput(event, index)}
                         error={!!errors.commodityCodeValue}
                         helperText={errors?.commodityCodeValue?.message}
@@ -586,7 +564,7 @@ Billing Country: ${values.billingCountry}\n`;
                         label="Quantity"
                         style={{ marginLeft: '10px', width: '17%' }}
                         //variant="filled"
-                        value={values.spareKits[index].quantity}
+                        value={values?.spareKits[index]?.quantity}
                         onChange={(event) => handleChangeInput(event, index)}
                       />
                       <br />
