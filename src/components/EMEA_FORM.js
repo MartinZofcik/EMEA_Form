@@ -63,8 +63,8 @@ const dispatchTypeOptions = [
 
 const paymentMethodOptions = [
   'Credit/Debit Card',
-  'PO',
-  'DPA',
+  'Prepaid',
+  'Invoice',
   'Undecided/Unknown',
 ];
 
@@ -113,7 +113,7 @@ const optionDepotParts = [
 ];
 
 const optionOnsite = [
-  { label: 'Labour', value: '687-10977' },
+  { label: 'Labour', value: '687-10977', disabled: true },
   { label: 'Motherboard', value: '739-56817' },
   { label: 'LCD', value: '739-56818' },
   { label: 'HDD', value: '739-56819' },
@@ -149,7 +149,9 @@ const optionOther = [
   { label: 'Software support', value: '701-16641' },
 ];
 
-const optionLabourOnly = [{ label: 'Labour', value: '687-10977' }];
+const optionLabourOnly = [
+  { label: 'Labour', value: '687-10977', disabled: true },
+];
 
 const commodityOptionsSwitch = (dispatchType) => {
   switch (dispatchType) {
@@ -174,7 +176,7 @@ const commodityOptionsSwitch = (dispatchType) => {
     case 'Other':
       return optionOther;
   }
-}; //************************************************COMMODITY TYPES BASED ON SELECTED DISPATCH TYPE
+};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const EMEA_FORM = () => {
@@ -185,9 +187,10 @@ export const EMEA_FORM = () => {
     serviceTag: '',
     dispatchType: '',
     commodityRequested: [],
+    partsToUpgrade: [],
     spareKits: [],
     paymentMethod: '',
-    submitterEmail: '',
+    //submitterEmail: '',
     name: '',
     phone: '',
     ext: '',
@@ -211,11 +214,13 @@ export const EMEA_FORM = () => {
 Type of Request: TOTAL SOLUTIONS
 Issue: ${values.issue}
 Diagnostic Status: ${values.diagnosticStatus}
-Commodity Requested: ${
-    values.commodityRequested
-  } ${values.commodityRequested?.map(
-    ({ quantity, value }) => `${quantity} x ${value}`
-  )}
+Commodity Requested:${
+    values.repairUpgrade === 'Repair/Upgrade' ? ' ' : ''
+  }${values.commodityRequested.join(', ')}${Object.values(
+    values.spareKits
+  )?.map(({ value, quantity }) => ` ${quantity}x ${value}`)}${Object.values(
+    values.partsToUpgrade
+  )?.map(({ value }) => ` ${value}`)}
 Dispatch Type: ${values.dispatchType}
 Payment Method: ${values.paymentMethod}\n
 Service Tag: ${values.serviceTag}\n
@@ -239,7 +244,19 @@ Billing PostalCode: ${values.billingZIP}
 Billing Country: ${values.billingCountry}\n`;
 
   useEffect(() => {
-    setValue({ ...values, commodityRequested: [] });
+    if (
+      values.dispatchType === 'Parts Only' ||
+      values.dispatchType === 'Depot' ||
+      values.dispatchType === 'Depot Diagnostics' ||
+      values.dispatchType === 'Other'
+    ) {
+      setValue({ ...values, commodityRequested: [] });
+    } else if (
+      values.dispatchType === 'Onsite' ||
+      values.dispatchType === 'Labour Only'
+    ) {
+      setValue({ ...values, commodityRequested: ['687-10977'] });
+    }
   }, [values.dispatchType]);
 
   useEffect(() => {
@@ -255,7 +272,6 @@ Billing Country: ${values.billingCountry}\n`;
   }, [values.repairUpgrade]);
 
   const handleChange = (event) => {
-    console.log(typeof event.target.value);
     setValue({ ...values, [event.target.name]: event.target.value ?? '' });
   };
 
@@ -263,12 +279,23 @@ Billing Country: ${values.billingCountry}\n`;
 
   const [billingCheck, setBillingCheck] = useState(false);
 
+  const [upgradeParts, setUpgradeParts] = useState(false);
+
   const handleBillingCheck = () => {
     setBillingCheck(!billingCheck);
   };
 
+  const handleUpgradePartsCheck = () => {
+    setUpgradeParts(!upgradeParts);
+  };
+
+  // useEffect(() => {
+  //   setValue({
+  //     partsToUpgrade: [],
+  //   });
+  // }, [upgradeParts]);
+
   const handleChangeMultiSelect = (event) => {
-    //console.log(event.target.value);
     setValue({
       ...values,
       commodityRequested: event.target.value,
@@ -276,30 +303,51 @@ Billing Country: ${values.billingCountry}\n`;
   };
 
   const onSubmit = () => {
-    // if (!values.dispatchType) {
-    //   alert('Please add a task');
-    //   return;
-    // }
+    var toAlert = '';
+    if (values.repairUpgrade === 'Repair/Upgrade') {
+      if (values.dispatchType === '') {
+        toAlert += 'Dispatch Type, ';
+      }
 
-    Swal.fire(
-      'Copied to clipboard',
-      'Please do NOT alter the output in SFDC',
-      'success'
-    );
-    navigator.clipboard.writeText(output);
+      if (values.commodityRequested.length === 0) {
+        toAlert += ' Commodity Requested, ';
+      }
+
+      if (
+        values.dispatchType === 'Onsite' &&
+        values.commodityRequested.length === 1
+      ) {
+        toAlert += ' at least one more Commodity Requested, ';
+      }
+    }
+
+    if (values.paymentMethod === '') {
+      toAlert += 'Payment Method, ';
+    }
+
+    if (values.shippingCountry === '') {
+      toAlert += ' Shipping Country, ';
+    }
+
+    if (toAlert === '') {
+      Swal.fire(
+        'Copied to clipboard',
+        '!!! Please do NOT alter the output in SFDC !!!',
+        'warning'
+      );
+      navigator.clipboard.writeText(output);
+    } else {
+      alert('Please provide ' + toAlert);
+      return;
+    }
   };
 
-  ///////////////////// DYNAMIC FIELD CODE
-  const [inputFields, setInputFields] = useState([
+  ///////////////////// DYNAMIC FIELD FOR SPARE KITS
+  const [spareKitsFields, setSpareKitsFields] = useState([
     { id: uuidv4(), commodityNum: '', quantity: '' },
   ]);
 
-  const handleSubmitDynamic = (e) => {
-    e.preventDefault();
-    console.log('InputFields', inputFields);
-  };
-
-  const handleChangeInput = (event, index) => {
+  const handleSpareKits = (event, index) => {
     console.log(values.spareKits);
     event.target.name === 'commodityCodeValue'
       ? setValue({
@@ -324,23 +372,58 @@ Billing Country: ${values.billingCountry}\n`;
         });
   };
 
-  const handleAddFields = () => {
-    setInputFields([
-      ...inputFields,
+  const handleAddFieldsSpareKits = () => {
+    setSpareKitsFields([
+      ...spareKitsFields,
       { id: uuidv4(), commodityNum: '', quantity: '' },
     ]);
   };
 
-  const handleRemoveFields = (id) => {
-    const values = [...inputFields];
+  const handleRemoveFieldsSpareKits = (id) => {
+    const values = [...spareKitsFields];
     values.splice(
       values.findIndex((value) => value.id === id),
       1
     );
-    setInputFields(values);
+    setSpareKitsFields(values);
   };
 
-  //*************************************************************** VALIDATION START
+  ///////////////////// DYNAMIC FIELD FOR UPGRADE PARTS
+  const [upgradePartsFields, setUpgradePartsFields] = useState([
+    { id: uuidv4(), commodityNum: '' },
+  ]);
+
+  const handleUpgradeParts = (event, index) => {
+    setValue({
+      ...values,
+      partsToUpgrade: {
+        ...values.partsToUpgrade,
+        [`${index}`]: {
+          ...values.partsToUpgrade[`${index}`],
+          value: event.target.value,
+        },
+      },
+    });
+  };
+
+  const handleAddFieldsUpgradeParts = () => {
+    setUpgradePartsFields([
+      ...upgradePartsFields,
+      { id: uuidv4(), commodityNum: '' },
+    ]);
+  };
+
+  const handleRemoveFieldsUpgradeParts = (id) => {
+    const values = [...upgradePartsFields];
+    values.splice(
+      values.findIndex((value) => value.id === id),
+      1
+    );
+    setUpgradePartsFields(values);
+  };
+
+  //*************************************************************** YUP VALIDATION START
+
   const repairUpgradeSchema =
     values.repairUpgrade === 'Repair/Upgrade'
       ? {
@@ -365,20 +448,8 @@ Billing Country: ${values.billingCountry}\n`;
               (val) => val.length === 7
             )
             .required('Service Tag is a required field'),
-
-          // dispatchType: yup
-          //   .string()
-          //   .required("Dispatch Type is a required field")
-          //   .oneOf(dispatchTypeOptions), //SELECTY POJEANE TAKTO NEJDU
-
-          //commodityRequested: yup.string().required(),
-
-          //paymentMethod: yup.
         }
-      : {
-          //commodityCodeValue: yup.string().required('Commodity Code is a required field'),
-          //commodityCodeQuantity: yup.
-        };
+      : {};
 
   const schema = yup.object().shape({
     ...repairUpgradeSchema,
@@ -388,15 +459,7 @@ Billing Country: ${values.billingCountry}\n`;
       .matches(/^([^*~^;:<>]*)$/, 'Customer Name is not valid')
       .required('Customer Name is a required field'),
 
-    phone: yup
-      .string()
-      .matches(/^([0-9]*)$/, 'Customer Phone should contain numbers only')
-      .test(
-        'len',
-        'Customer Phone must be exactly 10 characters long',
-        (val) => val.length === 10
-      )
-      .required('Customer Phone is a required field'),
+    phone: yup.string().required('Customer Phone is a required field'),
 
     customerEmail: yup
       .string()
@@ -410,8 +473,7 @@ Billing Country: ${values.billingCountry}\n`;
 
     shippingLine2: yup
       .string()
-      .matches(/^([^*~^;:<>]*)$/, 'Line2 is not valid')
-      .required('Shipping Line 2 is a required field'),
+      .matches(/^([^*~^;:<>]*)$/, 'Line2 is not valid'),
 
     shippingCity: yup
       .string()
@@ -420,14 +482,11 @@ Billing Country: ${values.billingCountry}\n`;
 
     shippingState: yup
       .string()
-      .matches(/^([^*~^;:<>]*)$/, 'State is not valid')
-      .required('Shipping State is a required field'),
+      .matches(/^([^*~^;:<>]*)$/, 'State is not valid'),
 
     shippingZIP: yup
       .string()
       .required('Shipping ZIP/Postal is a required field'),
-
-    //shippingCountry: yup.
   });
 
   //*************************************************************** VALIDATION END
@@ -437,7 +496,7 @@ Billing Country: ${values.billingCountry}\n`;
     resolver: yupResolver(schema),
   });
 
-  useEffect(() => console.log(errors), [errors]);
+  //useEffect(() => console.log(errors), [errors]);
 
   return (
     <>
@@ -464,9 +523,9 @@ Billing Country: ${values.billingCountry}\n`;
                     label="Request Type"
                     defaultValue={true}
                   >
-                    <MenuItem value={'Repair/Upgrade'}>Repair/Upgrade</MenuItem>
+                    <MenuItem value={'Repair/Upgrade'}>Repair</MenuItem>
                     <MenuItem value={'Spare Parts/S&P/Kits'}>
-                      Spare Parts/S&P/Kits
+                      Upgrade/Spare Parts/S&P/Kits
                     </MenuItem>
                   </Select>
                 </FormControl>
@@ -543,11 +602,59 @@ Billing Country: ${values.billingCountry}\n`;
                       value={values.commodityRequested}
                       options={commodityOptionsSwitch(values.dispatchType)}
                     />
+
+                    <FormControlLabel
+                      style={{ marginBottom: '-15px' }}
+                      control={
+                        <Checkbox
+                          checked={upgradeParts}
+                          onChange={handleUpgradePartsCheck}
+                          name="UpgradeParts"
+                          color="primary"
+                        />
+                      }
+                      label="Upgrade Parts"
+                    />
+
+                    {upgradeParts &&
+                      upgradePartsFields.map((inputField, index) => (
+                        <div
+                          //* *********************************************************************UPGRADE PARTS
+
+                          key={inputField.id}
+                          style={{ marginTop: '20px', marginBottom: '20px' }}
+                        >
+                          <TextField
+                            name="upgradePartsValue"
+                            label="SKU Number"
+                            style={{ width: '53%' }}
+                            //variant="filled"
+                            value={values?.partsToUpgrade[index]?.value}
+                            onChange={(event) =>
+                              handleUpgradeParts(event, index)
+                            }
+                            // error={!!errors.commodityCodeValue}
+                            // helperText={errors?.commodityCodeValue?.message}
+                          />
+
+                          <IconButton
+                            disabled={upgradePartsFields.length === 1}
+                            onClick={() =>
+                              handleRemoveFieldsUpgradeParts(inputField.id)
+                            }
+                          >
+                            <RemoveIcon />
+                          </IconButton>
+                          <IconButton onClick={handleAddFieldsUpgradeParts}>
+                            <AddIcon />
+                          </IconButton>
+                        </div>
+                      ))}
                   </div>
                 )}
 
                 {values.repairUpgrade === 'Spare Parts/S&P/Kits' &&
-                  inputFields.map((inputField, index) => (
+                  spareKitsFields.map((inputField, index) => (
                     <div key={inputField.id} style={{ marginTop: '10px' }}>
                       <TextField
                         name="commodityCodeValue"
@@ -555,26 +662,29 @@ Billing Country: ${values.billingCountry}\n`;
                         style={{ width: '53%' }}
                         //variant="filled"
                         value={values?.spareKits[index]?.value}
-                        onChange={(event) => handleChangeInput(event, index)}
-                        error={!!errors.commodityCodeValue}
-                        helperText={errors?.commodityCodeValue?.message}
+                        onChange={(event) => handleSpareKits(event, index)}
+                        // error={!!errors.commodityCodeValue}
+                        // helperText={errors?.commodityCodeValue?.message}
                       />
                       <TextField
                         name="commodityCodeQuantity"
                         label="Quantity"
+                        type="number"
                         style={{ marginLeft: '10px', width: '17%' }}
                         //variant="filled"
                         value={values?.spareKits[index]?.quantity}
-                        onChange={(event) => handleChangeInput(event, index)}
+                        onChange={(event) => handleSpareKits(event, index)}
                       />
                       <br />
                       <IconButton
-                        disabled={inputFields.length === 1}
-                        onClick={() => handleRemoveFields(inputField.id)}
+                        disabled={spareKitsFields.length === 1}
+                        onClick={() =>
+                          handleRemoveFieldsSpareKits(inputField.id)
+                        }
                       >
                         <RemoveIcon />
                       </IconButton>
-                      <IconButton onClick={handleAddFields}>
+                      <IconButton onClick={handleAddFieldsSpareKits}>
                         <AddIcon />
                       </IconButton>
                     </div>
@@ -677,6 +787,9 @@ Billing Country: ${values.billingCountry}\n`;
                   error={!!errors.bestTime}
                   helperText={errors?.bestTime?.message}
                 />
+                <small style={{ color: 'grey' }}>
+                  *2 hour window (e.g. 2PM-4PM CST)*
+                </small>
 
                 <Typography
                   component="h3"
@@ -685,6 +798,7 @@ Billing Country: ${values.billingCountry}\n`;
                 >
                   Shipping Address
                 </Typography>
+                <small>*can not ship to PO BOX*</small>
 
                 <Input
                   //* *********************************************************************SH LINE1

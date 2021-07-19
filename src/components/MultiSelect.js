@@ -45,9 +45,13 @@ export default function MultipleSelect({ options, onChange, value }) {
             </div>
           )}
         >
-          {options.map((object) => (
-            <MenuItem key={object.label} value={object.value}>
-              {object.label}
+          {options.map((option) => (
+            <MenuItem
+              key={option.label}
+              value={option.value}
+              disabled={option.disabled}
+            >
+              {option.label}
             </MenuItem>
           ))}
         </Select>

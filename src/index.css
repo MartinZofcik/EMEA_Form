@@ -8,7 +8,7 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  /* background-color: grey; */
+  user-select: none;
 }
 
 head,

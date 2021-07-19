@@ -21,7 +21,6 @@ export const Preview = ({ values }) => {
       <label className={styles.root}>Type of Request:&nbsp;</label>
       <label>{values.repairUpgrade}</label>
       <br />
-      <br />
 
       <label className={styles.root}>Issue:&nbsp;</label>
       <label>{values.issue}</label>
@@ -37,6 +36,9 @@ export const Preview = ({ values }) => {
         {Object.values(values.spareKits)?.map(
           ({ value, quantity }) => `${quantity}x ${value}, `
         )}
+      </label>
+      <label>
+        {Object.values(values.partsToUpgrade)?.map(({ value }) => `, ${value}`)}
       </label>
       <br />
 
@@ -76,27 +78,27 @@ export const Preview = ({ values }) => {
       <label className={styles.root}>SHIPPING ADDRESS:&nbsp;</label>
       <br />
 
-      <label className={styles.root}>Line1:&nbsp;</label>
+      <label className={styles.root}>Shipping Line1:&nbsp;</label>
       <label>{values.shippingLine1}</label>
       <br />
 
-      <label className={styles.root}>Line2:&nbsp;</label>
+      <label className={styles.root}>Shipping Line2:&nbsp;</label>
       <label>{values.shippingLine2}</label>
       <br />
 
-      <label className={styles.root}>City:&nbsp;</label>
+      <label className={styles.root}>Shipping City:&nbsp;</label>
       <label>{values.shippingCity}</label>
       <br />
 
-      <label className={styles.root}>State:&nbsp;</label>
+      <label className={styles.root}>Shipping State:&nbsp;</label>
       <label>{values.shippingState}</label>
       <br />
 
-      <label className={styles.root}>ZIP:&nbsp;</label>
+      <label className={styles.root}>Shipping ZIP:&nbsp;</label>
       <label>{values.shippingZIP}</label>
       <br />
 
-      <label className={styles.root}>Country:&nbsp;</label>
+      <label className={styles.root}>Shipping Country:&nbsp;</label>
       <label>{values.shippingCountry}</label>
       <br />
       <br />
@@ -104,27 +106,27 @@ export const Preview = ({ values }) => {
       <label className={styles.root}>BILLING ADDRESS:&nbsp;</label>
       <br />
 
-      <label className={styles.root}>Line1:&nbsp;</label>
+      <label className={styles.root}>Billing Line1:&nbsp;</label>
       <label>{values.billingLine1}</label>
       <br />
 
-      <label className={styles.root}>Line2:&nbsp;</label>
+      <label className={styles.root}>Billing Line2:&nbsp;</label>
       <label>{values.billingLine2}</label>
       <br />
 
-      <label className={styles.root}>City:&nbsp;</label>
+      <label className={styles.root}>Billing City:&nbsp;</label>
       <label>{values.billingCity}</label>
       <br />
 
-      <label className={styles.root}>State:&nbsp;</label>
+      <label className={styles.root}>Billing State:&nbsp;</label>
       <label>{values.billingState}</label>
       <br />
 
-      <label className={styles.root}>ZIP:&nbsp;</label>
+      <label className={styles.root}>Billing ZIP:&nbsp;</label>
       <label>{values.billingZIP}</label>
       <br />
 
-      <label className={styles.root}>Country:&nbsp;</label>
+      <label className={styles.root}>Billing Country:&nbsp;</label>
       <label>{values.billingCountry}</label>
       <br />
     </div>

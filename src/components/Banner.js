@@ -37,7 +37,7 @@ export const Banner = () => {
           padding: '1em',
         }}
       >
-        ProSupport to PON Handshake Template
+        EMEA ProSupport to PON Handshake
       </p>
     </div>
   );
