@@ -35,6 +35,7 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { Banner } from './Banner';
+import { HelpPage } from './HelpPage';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -181,7 +182,7 @@ const commodityOptionsSwitch = (dispatchType) => {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 export const EMEA_FORM = () => {
   const [values, setValue] = useState({
-    repairUpgrade: 'Repair/Upgrade',
+    repairUpgrade: 'Repair',
     issue: '',
     diagnosticStatus: '',
     serviceTag: '',
@@ -215,12 +216,10 @@ Type of Request: TOTAL SOLUTIONS
 Issue: ${values.issue}
 Diagnostic Status: ${values.diagnosticStatus}
 Commodity Requested:${
-    values.repairUpgrade === 'Repair/Upgrade' ? ' ' : ''
-  }${values.commodityRequested.join(', ')}${Object.values(
-    values.spareKits
-  )?.map(({ value, quantity }) => ` ${quantity}x ${value}`)}${Object.values(
-    values.partsToUpgrade
-  )?.map(({ value }) => ` ${value}`)}
+    values.repairUpgrade === 'Repair' ? ' ' : ''
+  }${values.commodityRequested.join(',')}${Object.values(values.spareKits)?.map(
+    ({ value, quantity }) => `${quantity}x ${value},`
+  )}${Object.values(values.partsToUpgrade)?.map(({ value }) => `,${value}`)}
 Dispatch Type: ${values.dispatchType}
 Payment Method: ${values.paymentMethod}\n
 Service Tag: ${values.serviceTag}\n
@@ -281,6 +280,16 @@ Billing Country: ${values.billingCountry}\n`;
 
   const [upgradeParts, setUpgradeParts] = useState(false);
 
+  const [step, setStep] = useState(1);
+
+  const mainPage = () => {
+    setStep(1);
+  };
+
+  const helpPage = () => {
+    setStep(2);
+  };
+
   const handleBillingCheck = () => {
     setBillingCheck(!billingCheck);
   };
@@ -304,40 +313,43 @@ Billing Country: ${values.billingCountry}\n`;
 
   const onSubmit = () => {
     var toAlert = '';
-    if (values.repairUpgrade === 'Repair/Upgrade') {
+    if (values.repairUpgrade === 'Repair') {
       if (values.dispatchType === '') {
-        toAlert += 'Dispatch Type, ';
+        toAlert += ' * Dispatch Type\n';
       }
 
       if (values.commodityRequested.length === 0) {
-        toAlert += ' Commodity Requested, ';
+        toAlert += ' * Commodity Requested\n';
       }
 
       if (
         values.dispatchType === 'Onsite' &&
         values.commodityRequested.length === 1
       ) {
-        toAlert += ' at least one more Commodity Requested, ';
+        toAlert += ' * At least one additional Commodity must be selected\n';
       }
     }
 
     if (values.paymentMethod === '') {
-      toAlert += 'Payment Method, ';
+      toAlert += ' * Payment Method\n';
     }
 
     if (values.shippingCountry === '') {
-      toAlert += ' Shipping Country, ';
+      toAlert += ' * Shipping Country\n';
     }
 
     if (toAlert === '') {
       Swal.fire(
-        'Copied to clipboard',
-        '!!! Please do NOT alter the output in SFDC !!!',
-        'warning'
+        'Output succesfully copied to clipboard',
+        'Please paste this output in SFDC as it is. Thanks',
+        'success'
       );
       navigator.clipboard.writeText(output);
     } else {
-      alert('Please provide ' + toAlert);
+      alert(
+        'You can not copy to clipboard because the following information \nis missing in the form: \n\n' +
+          toAlert
+      );
       return;
     }
   };
@@ -425,19 +437,19 @@ Billing Country: ${values.billingCountry}\n`;
   //*************************************************************** YUP VALIDATION START
 
   const repairUpgradeSchema =
-    values.repairUpgrade === 'Repair/Upgrade'
+    values.repairUpgrade === 'Repair'
       ? {
           issue: yup
             .string()
-            .matches(/^([^0-9]*)$/, 'Issue should not contain numbers')
+            //.matches(/^([^0-9]*)$/, 'Issue should not contain numbers')
             .required('Issue is a required field'),
 
           diagnosticStatus: yup
             .string()
-            .matches(
-              /^([^0-9]*)$/,
-              'Diagnostic status should not contain numbers'
-            )
+            // .matches(
+            //   /^([^0-9]*)$/,
+            //   'Diagnostic status should not contain numbers'
+            // )
             .required('Diagnostic status is a required field'),
 
           serviceTag: yup
@@ -496,99 +508,219 @@ Billing Country: ${values.billingCountry}\n`;
     resolver: yupResolver(schema),
   });
 
-  //useEffect(() => console.log(errors), [errors]);
-
-  return (
-    <>
-      <Banner />
-      <Container fluid>
-        <Row>
-          <Col>
-            <MainContainer>
-              <Header title="Issue Info" />
-              <Form onSubmit={handleSubmit(onSubmit)}>
-                <FormControl
-                  style={{ marginTop: '-10px' }}
-                  //* *********************************************************************REQUEST TYPE
-                  //required
-                  //variant="outlined"
-                  className={styles.root}
-                >
-                  <InputLabel>Request Type</InputLabel>
-                  <Select
-                    ref={register}
-                    value={values.repairUpgrade}
-                    name="repairUpgrade"
-                    onChange={handleChange}
-                    label="Request Type"
-                    defaultValue={true}
-                  >
-                    <MenuItem value={'Repair/Upgrade'}>Repair</MenuItem>
-                    <MenuItem value={'Spare Parts/S&P/Kits'}>
-                      Upgrade/Spare Parts/S&P/Kits
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-
-                {values.repairUpgrade === 'Repair/Upgrade' && (
-                  <div>
-                    <Input
-                      //* *********************************************************************ISSUE
-                      //required
-                      className={styles.root}
-                      ref={register}
-                      value={values.issue}
-                      //defaultValue={values.issue}
-                      name="issue"
-                      type="text"
-                      label="Issue"
-                      onChange={handleChange}
-                      error={!!errors.issue}
-                      helperText={errors?.issue?.message}
-                    />
-
-                    <Input
-                      //* *********************************************************************DIAGNOSTIC STATUS
-                      className={styles.root}
-                      ref={register}
-                      value={values.diagnosticStatus}
-                      name="diagnosticStatus"
-                      type="text"
-                      label="Diagnostic status (passed/error#)"
-                      onChange={handleChange}
-                      error={!!errors.diagnosticStatus}
-                      helperText={errors?.diagnosticStatus?.message}
-                    />
-
-                    <Input
-                      //* *********************************************************************SERVICE TAG
-                      className={styles.root}
-                      ref={register}
-                      value={values.serviceTag}
-                      name="serviceTag"
-                      type="text"
-                      label="Service Tag"
-                      onChange={handleChange}
-                      error={!!errors.serviceTag}
-                      helperText={errors?.serviceTag?.message}
-                    />
-
+  switch (step) {
+    case 1:
+      return (
+        <>
+          <Banner />
+          <Container fluid>
+            <Row>
+              <Col>
+                <MainContainer>
+                  <Header title="Issue Info" helpPage={helpPage} />
+                  <Form onSubmit={handleSubmit(onSubmit)}>
                     <FormControl
-                      //* *********************************************************************DISPATCH TYPE
+                      style={{ marginTop: '-10px' }}
+                      //* *********************************************************************REQUEST TYPE
                       //required
-                      // variant="outlined"
+                      //variant="outlined"
                       className={styles.root}
                     >
-                      <InputLabel>Dispatch Type</InputLabel>
+                      <InputLabel>Request Type</InputLabel>
                       <Select
                         ref={register}
-                        name="dispatchType"
-                        value={values.dispatchType}
+                        value={values.repairUpgrade}
+                        name="repairUpgrade"
                         onChange={handleChange}
-                        label="Dispatch Type"
-                        error={!!errors?.dispatchType?.message}
+                        label="Request Type"
+                        defaultValue={true}
                       >
-                        {dispatchTypeOptions.map((option, index) => (
+                        <MenuItem value={'Repair'}>Repair</MenuItem>
+                        <MenuItem value={'Upgrade/Spare Parts/S&P/Kits'}>
+                          Upgrade/Spare Parts/S&P/Kits
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    {values.repairUpgrade === 'Repair' && (
+                      <div>
+                        <Input
+                          //* *********************************************************************ISSUE
+                          //required
+                          className={styles.root}
+                          ref={register}
+                          value={values.issue}
+                          //defaultValue={values.issue}
+                          name="issue"
+                          type="text"
+                          label="Issue"
+                          onChange={handleChange}
+                          error={!!errors.issue}
+                          helperText={errors?.issue?.message}
+                        />
+
+                        <Input
+                          //* *********************************************************************DIAGNOSTIC STATUS
+                          className={styles.root}
+                          ref={register}
+                          value={values.diagnosticStatus}
+                          name="diagnosticStatus"
+                          type="text"
+                          label="Diagnostic status (passed/error#)"
+                          onChange={handleChange}
+                          error={!!errors.diagnosticStatus}
+                          helperText={errors?.diagnosticStatus?.message}
+                        />
+
+                        <Input
+                          //* *********************************************************************SERVICE TAG
+                          className={styles.root}
+                          ref={register}
+                          value={values.serviceTag}
+                          name="serviceTag"
+                          type="text"
+                          label="Service Tag"
+                          onChange={handleChange}
+                          error={!!errors.serviceTag}
+                          helperText={errors?.serviceTag?.message}
+                        />
+
+                        <FormControl
+                          //* *********************************************************************DISPATCH TYPE
+                          //required
+                          // variant="outlined"
+                          className={styles.root}
+                        >
+                          <InputLabel>Dispatch Type</InputLabel>
+                          <Select
+                            ref={register}
+                            name="dispatchType"
+                            value={values.dispatchType}
+                            onChange={handleChange}
+                            label="Dispatch Type"
+                            error={!!errors?.dispatchType?.message}
+                          >
+                            {dispatchTypeOptions.map((option, index) => (
+                              <MenuItem value={option} key={index}>
+                                {option}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+
+                        <MultipleSelect
+                          //* *********************************************************************COMMODITY REQUESTED
+                          onChange={handleChangeMultiSelect}
+                          value={values.commodityRequested}
+                          options={commodityOptionsSwitch(values.dispatchType)}
+                        />
+
+                        <FormControlLabel
+                          style={{ marginBottom: '-15px' }}
+                          control={
+                            <Checkbox
+                              checked={upgradeParts}
+                              onChange={handleUpgradePartsCheck}
+                              name="UpgradeParts"
+                              color="primary"
+                            />
+                          }
+                          label="Upgrade Parts"
+                        />
+
+                        {upgradeParts &&
+                          upgradePartsFields.map((inputField, index) => (
+                            <div
+                              //* *********************************************************************UPGRADE PARTS
+
+                              key={inputField.id}
+                              style={{
+                                marginTop: '20px',
+                                marginBottom: '20px',
+                              }}
+                            >
+                              <TextField
+                                name="upgradePartsValue"
+                                label="SKU Number"
+                                style={{ width: '53%' }}
+                                //variant="filled"
+                                value={values?.partsToUpgrade[index]?.value}
+                                onChange={(event) =>
+                                  handleUpgradeParts(event, index)
+                                }
+                                // error={!!errors.commodityCodeValue}
+                                // helperText={errors?.commodityCodeValue?.message}
+                              />
+
+                              <IconButton
+                                disabled={upgradePartsFields.length === 1}
+                                onClick={() =>
+                                  handleRemoveFieldsUpgradeParts(inputField.id)
+                                }
+                              >
+                                <RemoveIcon />
+                              </IconButton>
+                              <IconButton onClick={handleAddFieldsUpgradeParts}>
+                                <AddIcon />
+                              </IconButton>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+
+                    {values.repairUpgrade === 'Upgrade/Spare Parts/S&P/Kits' &&
+                      spareKitsFields.map((inputField, index) => (
+                        <div key={inputField.id} style={{ marginTop: '10px' }}>
+                          <TextField
+                            name="commodityCodeValue"
+                            label="Commodity Code"
+                            style={{ width: '53%' }}
+                            //variant="filled"
+                            value={values?.spareKits[index]?.value}
+                            onChange={(event) => handleSpareKits(event, index)}
+                            // error={!!errors.commodityCodeValue}
+                            // helperText={errors?.commodityCodeValue?.message}
+                          />
+                          <TextField
+                            name="commodityCodeQuantity"
+                            label="Quantity"
+                            type="number"
+                            style={{ marginLeft: '10px', width: '17%' }}
+                            //variant="filled"
+                            value={values?.spareKits[index]?.quantity}
+                            onChange={(event) => handleSpareKits(event, index)}
+                          />
+                          <br />
+                          <IconButton
+                            disabled={spareKitsFields.length === 1}
+                            onClick={() =>
+                              handleRemoveFieldsSpareKits(inputField.id)
+                            }
+                          >
+                            <RemoveIcon />
+                          </IconButton>
+                          <IconButton onClick={handleAddFieldsSpareKits}>
+                            <AddIcon />
+                          </IconButton>
+                        </div>
+                      ))}
+
+                    <FormControl
+                      //* *********************************************************************PAYMENT METHOD
+                      //required
+                      //variant="outlined"
+                      className={styles.root}
+                    >
+                      <InputLabel>Payment Method</InputLabel>
+                      <Select
+                        ref={register}
+                        name="paymentMethod"
+                        value={values.paymentMethod}
+                        onChange={handleChange}
+                        label="Payment Method"
+                        error={!!errors.paymentMethod}
+                      >
+                        {paymentMethodOptions.map((option, index) => (
                           <MenuItem value={option} key={index}>
                             {option}
                           </MenuItem>
@@ -596,380 +728,156 @@ Billing Country: ${values.billingCountry}\n`;
                       </Select>
                     </FormControl>
 
-                    <MultipleSelect
-                      //* *********************************************************************COMMODITY REQUESTED
-                      onChange={handleChangeMultiSelect}
-                      value={values.commodityRequested}
-                      options={commodityOptionsSwitch(values.dispatchType)}
-                    />
-
-                    <FormControlLabel
-                      style={{ marginBottom: '-15px' }}
-                      control={
-                        <Checkbox
-                          checked={upgradeParts}
-                          onChange={handleUpgradePartsCheck}
-                          name="UpgradeParts"
-                          color="primary"
-                        />
-                      }
-                      label="Upgrade Parts"
-                    />
-
-                    {upgradeParts &&
-                      upgradePartsFields.map((inputField, index) => (
-                        <div
-                          //* *********************************************************************UPGRADE PARTS
-
-                          key={inputField.id}
-                          style={{ marginTop: '20px', marginBottom: '20px' }}
-                        >
-                          <TextField
-                            name="upgradePartsValue"
-                            label="SKU Number"
-                            style={{ width: '53%' }}
-                            //variant="filled"
-                            value={values?.partsToUpgrade[index]?.value}
-                            onChange={(event) =>
-                              handleUpgradeParts(event, index)
-                            }
-                            // error={!!errors.commodityCodeValue}
-                            // helperText={errors?.commodityCodeValue?.message}
-                          />
-
-                          <IconButton
-                            disabled={upgradePartsFields.length === 1}
-                            onClick={() =>
-                              handleRemoveFieldsUpgradeParts(inputField.id)
-                            }
-                          >
-                            <RemoveIcon />
-                          </IconButton>
-                          <IconButton onClick={handleAddFieldsUpgradeParts}>
-                            <AddIcon />
-                          </IconButton>
-                        </div>
-                      ))}
-                  </div>
-                )}
-
-                {values.repairUpgrade === 'Spare Parts/S&P/Kits' &&
-                  spareKitsFields.map((inputField, index) => (
-                    <div key={inputField.id} style={{ marginTop: '10px' }}>
-                      <TextField
-                        name="commodityCodeValue"
-                        label="Commodity Code"
-                        style={{ width: '53%' }}
-                        //variant="filled"
-                        value={values?.spareKits[index]?.value}
-                        onChange={(event) => handleSpareKits(event, index)}
-                        // error={!!errors.commodityCodeValue}
-                        // helperText={errors?.commodityCodeValue?.message}
-                      />
-                      <TextField
-                        name="commodityCodeQuantity"
-                        label="Quantity"
-                        type="number"
-                        style={{ marginLeft: '10px', width: '17%' }}
-                        //variant="filled"
-                        value={values?.spareKits[index]?.quantity}
-                        onChange={(event) => handleSpareKits(event, index)}
-                      />
-                      <br />
-                      <IconButton
-                        disabled={spareKitsFields.length === 1}
-                        onClick={() =>
-                          handleRemoveFieldsSpareKits(inputField.id)
-                        }
-                      >
-                        <RemoveIcon />
-                      </IconButton>
-                      <IconButton onClick={handleAddFieldsSpareKits}>
-                        <AddIcon />
-                      </IconButton>
-                    </div>
-                  ))}
-
-                <FormControl
-                  //* *********************************************************************PAYMENT METHOD
-                  //required
-                  //variant="outlined"
-                  className={styles.root}
-                >
-                  <InputLabel>Payment Method</InputLabel>
-                  <Select
-                    ref={register}
-                    name="paymentMethod"
-                    value={values.paymentMethod}
-                    onChange={handleChange}
-                    label="Payment Method"
-                    error={!!errors.paymentMethod}
-                  >
-                    {paymentMethodOptions.map((option, index) => (
-                      <MenuItem value={option} key={index}>
-                        {option}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <Typography
-                  component="h3"
-                  variant="h4"
-                  style={{ marginTop: '20px' }}
-                >
-                  Customer Contact
-                </Typography>
-
-                <Input
-                  //* *********************************************************************CUSTOMER NAME
-                  className={styles.root}
-                  ref={register}
-                  name="name"
-                  type="text"
-                  label="Name"
-                  value={values.name}
-                  onChange={handleChange}
-                  error={!!errors.name}
-                  helperText={errors?.name?.message}
-                />
-
-                <Input
-                  //* *********************************************************************CUSTOMER PHONE
-                  //className={styles.half}
-                  className={styles.root}
-                  ref={register}
-                  name="phone"
-                  type="text"
-                  label="Phone"
-                  value={values.phone}
-                  onChange={handleChange}
-                  error={!!errors.phone}
-                  helperText={errors?.phone?.message}
-                />
-
-                <Input
-                  //* *********************************************************************PHONE EXT
-                  //className={styles.halfRight}
-                  className={styles.root}
-                  ref={register}
-                  name="ext"
-                  type="text"
-                  label="Phone Ext"
-                  value={values.ext}
-                  onChange={handleChange}
-                  error={!!errors.ext}
-                  helperText={errors?.ext?.message}
-                />
-
-                <Input
-                  //* *********************************************************************CUSTOMER EMAIL
-                  className={styles.root}
-                  ref={register}
-                  name="customerEmail"
-                  type="text"
-                  label="Customer Email"
-                  value={values.customerEmail}
-                  onChange={handleChange}
-                  error={!!errors.customerEmail}
-                  helperText={errors?.customerEmail?.message}
-                />
-
-                <Input
-                  //* *********************************************************************BEST TIME TO REACH
-                  className={styles.root}
-                  ref={register}
-                  name="bestTime"
-                  type="text"
-                  label="Best Time to Reach"
-                  value={values.bestTime}
-                  onChange={handleChange}
-                  error={!!errors.bestTime}
-                  helperText={errors?.bestTime?.message}
-                />
-                <small style={{ color: 'grey' }}>
-                  *2 hour window (e.g. 2PM-4PM CST)*
-                </small>
-
-                <Typography
-                  component="h3"
-                  variant="h4"
-                  style={{ marginTop: '20px' }}
-                >
-                  Shipping Address
-                </Typography>
-                <small>*can not ship to PO BOX*</small>
-
-                <Input
-                  //* *********************************************************************SH LINE1
-                  className={styles.root}
-                  ref={register}
-                  name="shippingLine1"
-                  type="text"
-                  label="Line 1"
-                  value={values.shippingLine1}
-                  onChange={handleChange}
-                  error={!!errors.shippingLine1}
-                  helperText={errors?.shippingLine1?.message}
-                />
-
-                <Input
-                  //* *********************************************************************SH LINE2
-                  className={styles.root}
-                  ref={register}
-                  name="shippingLine2"
-                  type="text"
-                  label="Line 2"
-                  value={values.shippingLine2}
-                  onChange={handleChange}
-                  error={!!errors.shippingLine2}
-                  helperText={errors?.shippingLine2?.message}
-                />
-
-                <Input
-                  //* *********************************************************************SH CITY
-                  className={styles.root}
-                  ref={register}
-                  name="shippingCity"
-                  type="text"
-                  label="City"
-                  value={values.shippingCity}
-                  onChange={handleChange}
-                  error={!!errors.shippingCity}
-                  helperText={errors?.shippingCity?.message}
-                />
-
-                <Input
-                  //* *********************************************************************SH STATE
-                  className={styles.root}
-                  ref={register}
-                  name="shippingState"
-                  type="text"
-                  label="State"
-                  value={values.shippingState}
-                  onChange={handleChange}
-                  error={!!errors.shippingState}
-                  helperText={errors?.shippingState?.message}
-                />
-
-                <Input
-                  //* *********************************************************************SH ZIP
-                  className={styles.root}
-                  ref={register}
-                  name="shippingZIP"
-                  type="text"
-                  label="Zip/Postal (not APO/FPO)"
-                  value={values.shippingZIP}
-                  onChange={handleChange}
-                  error={!!errors.shippingZIP}
-                  helperText={errors?.shippingZIP?.message}
-                />
-
-                <FormControl
-                  //* *********************************************************************SH COUNTRY
-                  //required
-                  // variant="outlined"
-                  className={styles.root}
-                >
-                  <InputLabel>Country</InputLabel>
-                  <Select
-                    ref={register}
-                    name="shippingCountry"
-                    value={values.shippingCountry}
-                    value={values.shippingCountry}
-                    onChange={handleChange}
-                    label="Country"
-                    error={!!errors.shippingCountry}
-                  >
-                    {countryOptions.map((country, index) => (
-                      <MenuItem value={country} key={index}>
-                        {country}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                <FormControlLabel
-                  style={{ marginTop: '15px', marginBottom: '15px' }}
-                  control={
-                    <Checkbox
-                      checked={billingCheck}
-                      onChange={handleBillingCheck}
-                      name="BillingAddress"
-                      color="primary"
-                    />
-                  }
-                  label="Billing Address is different from Shipping"
-                />
-
-                {billingCheck && (
-                  <div>
-                    <Typography component="h3" variant="h4">
-                      Billing Address
+                    <Typography
+                      component="h3"
+                      variant="h4"
+                      style={{ marginTop: '20px' }}
+                    >
+                      Customer Contact
                     </Typography>
+
+                    <Input
+                      //* *********************************************************************CUSTOMER NAME
+                      className={styles.root}
+                      ref={register}
+                      name="name"
+                      type="text"
+                      label="Name"
+                      value={values.name}
+                      onChange={handleChange}
+                      error={!!errors.name}
+                      helperText={errors?.name?.message}
+                    />
+
+                    <Input
+                      //* *********************************************************************CUSTOMER PHONE
+                      //className={styles.half}
+                      className={styles.root}
+                      ref={register}
+                      name="phone"
+                      type="text"
+                      label="Phone"
+                      value={values.phone}
+                      onChange={handleChange}
+                      error={!!errors.phone}
+                      helperText={errors?.phone?.message}
+                    />
+
+                    <Input
+                      //* *********************************************************************PHONE EXT
+                      //className={styles.halfRight}
+                      className={styles.root}
+                      ref={register}
+                      name="ext"
+                      type="text"
+                      label="Phone Ext"
+                      value={values.ext}
+                      onChange={handleChange}
+                      error={!!errors.ext}
+                      helperText={errors?.ext?.message}
+                    />
+
+                    <Input
+                      //* *********************************************************************CUSTOMER EMAIL
+                      className={styles.root}
+                      ref={register}
+                      name="customerEmail"
+                      type="text"
+                      label="Customer Email"
+                      value={values.customerEmail}
+                      onChange={handleChange}
+                      error={!!errors.customerEmail}
+                      helperText={errors?.customerEmail?.message}
+                    />
+
+                    <Input
+                      //* *********************************************************************BEST TIME TO REACH
+                      className={styles.root}
+                      ref={register}
+                      name="bestTime"
+                      type="text"
+                      label="Best Time to Reach"
+                      value={values.bestTime}
+                      onChange={handleChange}
+                      error={!!errors.bestTime}
+                      helperText={errors?.bestTime?.message}
+                    />
+                    <small style={{ color: 'grey' }}>
+                      *2 hour window (e.g. 2PM-4PM CST)*
+                    </small>
+
+                    <Typography
+                      component="h3"
+                      variant="h4"
+                      style={{ marginTop: '20px' }}
+                    >
+                      Shipping Address
+                    </Typography>
+                    <small>*can not ship to PO BOX*</small>
+
                     <Input
                       //* *********************************************************************SH LINE1
                       className={styles.root}
                       ref={register}
-                      name="billingLine1"
+                      name="shippingLine1"
                       type="text"
                       label="Line 1"
-                      value={values.billingLine1}
+                      value={values.shippingLine1}
                       onChange={handleChange}
-                      error={!!errors.billingLine1}
-                      helperText={errors?.billingLine1?.message}
+                      error={!!errors.shippingLine1}
+                      helperText={errors?.shippingLine1?.message}
                     />
 
                     <Input
                       //* *********************************************************************SH LINE2
                       className={styles.root}
                       ref={register}
-                      name="billingLine2"
+                      name="shippingLine2"
                       type="text"
                       label="Line 2"
-                      value={values.billingLine2}
+                      value={values.shippingLine2}
                       onChange={handleChange}
-                      error={!!errors.billingLine2}
-                      helperText={errors?.billingLine2?.message}
+                      error={!!errors.shippingLine2}
+                      helperText={errors?.shippingLine2?.message}
                     />
 
                     <Input
                       //* *********************************************************************SH CITY
                       className={styles.root}
                       ref={register}
-                      name="billingCity"
+                      name="shippingCity"
                       type="text"
                       label="City"
-                      value={values.billingCity}
+                      value={values.shippingCity}
                       onChange={handleChange}
-                      error={!!errors.billingCity}
-                      helperText={errors?.billingCity?.message}
+                      error={!!errors.shippingCity}
+                      helperText={errors?.shippingCity?.message}
                     />
 
                     <Input
                       //* *********************************************************************SH STATE
                       className={styles.root}
                       ref={register}
-                      name="billingState"
+                      name="shippingState"
                       type="text"
                       label="State"
-                      value={values.billingState}
+                      value={values.shippingState}
                       onChange={handleChange}
-                      error={!!errors.billingState}
-                      helperText={errors?.billingState?.message}
+                      error={!!errors.shippingState}
+                      helperText={errors?.shippingState?.message}
                     />
 
                     <Input
                       //* *********************************************************************SH ZIP
                       className={styles.root}
                       ref={register}
-                      name="billingZIP"
+                      name="shippingZIP"
                       type="text"
                       label="Zip/Postal (not APO/FPO)"
-                      value={values.billingZIP}
+                      value={values.shippingZIP}
                       onChange={handleChange}
-                      error={!!errors.billingZIP}
-                      helperText={errors?.billingZIP?.message}
+                      error={!!errors.shippingZIP}
+                      helperText={errors?.shippingZIP?.message}
                     />
 
                     <FormControl
@@ -981,11 +889,12 @@ Billing Country: ${values.billingCountry}\n`;
                       <InputLabel>Country</InputLabel>
                       <Select
                         ref={register}
-                        name="billingCountry"
-                        value={values.billingCountry}
+                        name="shippingCountry"
+                        value={values.shippingCountry}
+                        value={values.shippingCountry}
                         onChange={handleChange}
                         label="Country"
-                        error={!!errors.billingCountry}
+                        error={!!errors.shippingCountry}
                       >
                         {countryOptions.map((country, index) => (
                           <MenuItem value={country} key={index}>
@@ -994,32 +903,141 @@ Billing Country: ${values.billingCountry}\n`;
                         ))}
                       </Select>
                     </FormControl>
-                  </div>
-                )}
-                <PrimaryButton
-                  type="submit"
-                  color="primary"
-                  //style={{ marginTop: '30px' }}
-                >
-                  Copy to Clipboard
-                </PrimaryButton>
-                {/* <PrimaryButton
+
+                    <FormControlLabel
+                      style={{ marginTop: '15px', marginBottom: '15px' }}
+                      control={
+                        <Checkbox
+                          checked={billingCheck}
+                          onChange={handleBillingCheck}
+                          name="BillingAddress"
+                          color="primary"
+                        />
+                      }
+                      label="Billing Address is different from Shipping"
+                    />
+
+                    {billingCheck && (
+                      <div>
+                        <Typography component="h3" variant="h4">
+                          Billing Address
+                        </Typography>
+                        <Input
+                          //* *********************************************************************SH LINE1
+                          className={styles.root}
+                          ref={register}
+                          name="billingLine1"
+                          type="text"
+                          label="Line 1"
+                          value={values.billingLine1}
+                          onChange={handleChange}
+                          error={!!errors.billingLine1}
+                          helperText={errors?.billingLine1?.message}
+                        />
+
+                        <Input
+                          //* *********************************************************************SH LINE2
+                          className={styles.root}
+                          ref={register}
+                          name="billingLine2"
+                          type="text"
+                          label="Line 2"
+                          value={values.billingLine2}
+                          onChange={handleChange}
+                          error={!!errors.billingLine2}
+                          helperText={errors?.billingLine2?.message}
+                        />
+
+                        <Input
+                          //* *********************************************************************SH CITY
+                          className={styles.root}
+                          ref={register}
+                          name="billingCity"
+                          type="text"
+                          label="City"
+                          value={values.billingCity}
+                          onChange={handleChange}
+                          error={!!errors.billingCity}
+                          helperText={errors?.billingCity?.message}
+                        />
+
+                        <Input
+                          //* *********************************************************************SH STATE
+                          className={styles.root}
+                          ref={register}
+                          name="billingState"
+                          type="text"
+                          label="State"
+                          value={values.billingState}
+                          onChange={handleChange}
+                          error={!!errors.billingState}
+                          helperText={errors?.billingState?.message}
+                        />
+
+                        <Input
+                          //* *********************************************************************SH ZIP
+                          className={styles.root}
+                          ref={register}
+                          name="billingZIP"
+                          type="text"
+                          label="Zip/Postal (not APO/FPO)"
+                          value={values.billingZIP}
+                          onChange={handleChange}
+                          error={!!errors.billingZIP}
+                          helperText={errors?.billingZIP?.message}
+                        />
+
+                        <FormControl
+                          //* *********************************************************************SH COUNTRY
+                          //required
+                          // variant="outlined"
+                          className={styles.root}
+                        >
+                          <InputLabel>Country</InputLabel>
+                          <Select
+                            ref={register}
+                            name="billingCountry"
+                            value={values.billingCountry}
+                            onChange={handleChange}
+                            label="Country"
+                            error={!!errors.billingCountry}
+                          >
+                            {countryOptions.map((country, index) => (
+                              <MenuItem value={country} key={index}>
+                                {country}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </div>
+                    )}
+                    <PrimaryButton
+                      type="submit"
+                      color="primary"
+                      //style={{ marginTop: '30px' }}
+                    >
+                      Copy to Clipboard
+                    </PrimaryButton>
+                    {/* <PrimaryButton
                   color="secondary"
                   //onClick={resetForm}
                 >
                   Reset
                 </PrimaryButton> */}
-              </Form>
-            </MainContainer>
-          </Col>
-          <Col>
-            <Preview
-              //******************************************************PREVIEW
-              values={values}
-            />
-          </Col>
-        </Row>
-      </Container>
-    </>
-  );
+                  </Form>
+                </MainContainer>
+              </Col>
+              <Col>
+                <Preview
+                  //******************************************************PREVIEW
+                  values={values}
+                />
+              </Col>
+            </Row>
+          </Container>
+        </>
+      );
+    case 2:
+      return <HelpPage mainPage={mainPage} />;
+  }
 };
